@@ -25,6 +25,28 @@ EMAIL_IN_PASSWORD_MESSAGE = 'Пароль не должен содержать �
 EXISTING_EMAIL_MESSAGE = 'Пользователь c почтой {} уже зарегистрирован!'
 JWT_LIFETIME_IN_SECONDS = 3600
 
+
+async def get_user_db(session: AsyncSession = Depends(get_async_session)):
+    yield SQLAlchemyUserDatabase(session, User)
+
+
+bearer_transport = BearerTransport(tokenUrl='auth/jwt/login')
+
+
+def get_jwt_strategy():
+    return JWTStrategy(
+        secret=settings.secret,
+        lifetime_seconds=JWT_LIFETIME_IN_SECONDS
+    )
+
+
+auth_backend = AuthenticationBackend(
+    name='jwt',
+    transport=bearer_transport,
+    get_strategy=get_jwt_strategy
+)
+
+
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
     async def validate_password(
@@ -45,27 +67,9 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         print(EXISTING_EMAIL_MESSAGE.format(user.email))
 
 
-def get_jwt_strategy():
-    return JWTStrategy(
-        secret=settings.secret,
-        lifetime_seconds=JWT_LIFETIME_IN_SECONDS
-    )
-
-
-async def get_user_db(session: AsyncSession = Depends(get_async_session)):
-    yield SQLAlchemyUserDatabase(session, User)
-
-
 async def get_user_manager(user_db=Depends(get_user_db)):
     yield UserManager(user_db)
 
-
-bearer_transport = BearerTransport(tokenUrl='auth/jwt/login')
-auth_backend = AuthenticationBackend(
-    name='jwt',
-    transport=bearer_transport,
-    get_strategy=get_jwt_strategy
-)
 fastapi_users = FastAPIUsers[User, int](get_user_manager, [auth_backend])
 current_user = fastapi_users.current_user(active=True)
 current_superuser = fastapi_users.current_user(active=True, superuser=True)

@@ -21,7 +21,7 @@ class CRUDBase(Generic[Model, Schema]):
             self,
             obj_id: int,
             session: AsyncSession
-    ) -> Optional[Model]:
+    ):
         db_obj = await session.execute(
             select(self.model).where(self.model.id == obj_id)
         )
@@ -30,7 +30,7 @@ class CRUDBase(Generic[Model, Schema]):
     async def get_multi(
             self,
             session: AsyncSession
-    ) -> list[Optional[Model]]:
+    ):
         db_objs = await session.execute(select(self.model))
         return db_objs.scalars().all()
 
@@ -40,7 +40,7 @@ class CRUDBase(Generic[Model, Schema]):
             session: AsyncSession,
             commit: bool = True,
             user: Optional[User] = None
-    ) -> Optional[Model]:
+    ):
         obj_in_data = obj_in.dict()
         if user:
             obj_in_data['user_id'] = user.id
@@ -57,7 +57,7 @@ class CRUDBase(Generic[Model, Schema]):
             obj_in: Schema,
             session: AsyncSession,
             commit: bool = True
-    ) -> Optional[Model]:
+    ):
         obj_data = jsonable_encoder(db_obj)
         update_data = obj_in.dict(exclude_unset=True)
         for field in obj_data:
