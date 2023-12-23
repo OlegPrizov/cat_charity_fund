@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.crud.charity_project import charity_project_crud
 from app.crud.donation import donation_crud
 from app.models.donation import Donation
-from app.models.template_model import TemplateModel
+from app.models.sample_model import TemplateModel
 
 
 async def investing(

@@ -1,6 +1,6 @@
 from sqlalchemy import Column, ForeignKey, Integer, Text
 
-from app.models.template_model import TemplateModel
+from app.models.sample_model import TemplateModel
 
 
 class Donation(TemplateModel):

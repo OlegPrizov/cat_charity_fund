@@ -5,11 +5,13 @@ from fastapi_users import (
     BaseUserManager,
     FastAPIUsers,
     IntegerIDMixin,
-    InvalidPasswordException)
+    InvalidPasswordException
+)
 from fastapi_users.authentication import (
     AuthenticationBackend,
     BearerTransport,
-    JWTStrategy)
+    JWTStrategy
+)
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,10 +20,10 @@ from app.core.db import get_async_session
 from app.models import User
 from app.schemas.user import UserCreate
 
-TEXT_ERROR_FEW_SYMBOLS = 'Password should be at least 3 characters'
-TEXT_ERROR_EMAIL_IS_PASS = 'Пароль не должен содержать эл. почту!'
-TEXT_ERROR_EXISTING_EMAIL = 'Пользователь c почтой {} уже зарегистрирован!'
-
+LACK_OF_SYMBOLS_MESSAGE = 'Password should be at least 3 characters'
+EMAIL_IN_PASSWORD_MESSAGE = 'Пароль не должен содержать эл. почту!'
+EXISTING_EMAIL_MESSAGE = 'Пользователь c почтой {} уже зарегистрирован!'
+JWT_LIFETIME_IN_SECONDS = 3600
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
@@ -29,22 +31,25 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             self,
             password: str,
             user: Union[UserCreate, User]
-    ) -> None:
+    ):
         if len(password) < 3:
-            raise InvalidPasswordException(reason=TEXT_ERROR_FEW_SYMBOLS)
+            raise InvalidPasswordException(LACK_OF_SYMBOLS_MESSAGE)
         if user.email in password:
-            raise InvalidPasswordException(reason=TEXT_ERROR_EMAIL_IS_PASS)
+            raise InvalidPasswordException(EMAIL_IN_PASSWORD_MESSAGE)
 
     async def on_after_register(
             self,
             user: User,
             request: Optional[Request] = None
-    ) -> None:
-        print(TEXT_ERROR_EXISTING_EMAIL.format(user.email))
+    ):
+        print(EXISTING_EMAIL_MESSAGE.format(user.email))
 
 
-def get_jwt_strategy() -> JWTStrategy:
-    return JWTStrategy(secret=settings.secret, lifetime_seconds=3600)
+def get_jwt_strategy():
+    return JWTStrategy(
+        secret=settings.secret,
+        lifetime_seconds=JWT_LIFETIME_IN_SECONDS
+    )
 
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
@@ -59,7 +64,8 @@ bearer_transport = BearerTransport(tokenUrl='auth/jwt/login')
 auth_backend = AuthenticationBackend(
     name='jwt',
     transport=bearer_transport,
-    get_strategy=get_jwt_strategy)
+    get_strategy=get_jwt_strategy
+)
 fastapi_users = FastAPIUsers[User, int](get_user_manager, [auth_backend])
 current_user = fastapi_users.current_user(active=True)
 current_superuser = fastapi_users.current_user(active=True, superuser=True)
