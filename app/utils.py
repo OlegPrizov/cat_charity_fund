@@ -6,16 +6,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.crud.charity_project import charity_project_crud
 from app.crud.donation import donation_crud
 from app.models.donation import Donation
-from app.models.sample_model import TemplateModel
+from app.models.sample_model import DonationAndCharityProjectBaseModel
 
 
 async def investing(
     session: AsyncSession,
-    target: TemplateModel
-) -> list[Optional[TemplateModel]]:
+    target: DonationAndCharityProjectBaseModel
+) -> list[Optional[DonationAndCharityProjectBaseModel]]:
 
     def update_object(
-        object: TemplateModel,
+        object: DonationAndCharityProjectBaseModel,
         amount: int
     ) -> None:
         object.invested_amount = (object.invested_amount or 0) + amount
