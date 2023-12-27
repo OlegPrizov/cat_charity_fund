@@ -14,15 +14,6 @@ async def investing(
     target: DonationAndCharityProjectBaseModel
 ) -> list[Optional[DonationAndCharityProjectBaseModel]]:
 
-    def update_object(
-        object: DonationAndCharityProjectBaseModel,
-        amount: int
-    ) -> None:
-        object.invested_amount = (object.invested_amount or 0) + amount
-        if object.full_amount == object.invested_amount:
-            object.fully_invested = True
-            object.close_date = datetime.now()
-
     crud = (
         charity_project_crud
         if isinstance(target, Donation)
@@ -32,8 +23,13 @@ async def investing(
         amount = min(
             source.full_amount - (source.invested_amount or 0),
             target.full_amount - (target.invested_amount or 0))
-        update_object(target, amount)
-        update_object(source, amount)
+
+        for obj in [target, source]:
+            obj.invested_amount = (obj.invested_amount or 0) + amount
+            if obj.full_amount == obj.invested_amount:
+                obj.fully_invested = True
+                obj.close_date = datetime.now()
+
         updated_objects.append(source)
         if target.fully_invested:
             break
