@@ -9,14 +9,15 @@ from app.api.validators import (
 from app.core.db import get_async_session
 from app.core.user import current_superuser
 from app.crud.charity_project import charity_project_crud
+from app.crud.donation import donation_crud
 from app.schemas.charity_project import (
     CharityProjectCreate,
     CharityProjectDB,
     CharityProjectUpdate)
 from app.utils import investing
-from sqlalchemy import not_, select
+
 router = APIRouter()
-from app.crud.charity_project import CRUDCharityProject
+
 
 @router.post(
     '/',
@@ -31,11 +32,15 @@ async def create_new_charity_project(
         charity_project,
         session,
         False)
-    opened_objects = await charity_project_crud.get_opened_objects(session=session)
-    session.add_all(await investing(new_project, opened_objects))
+    session.add_all(
+        investing(
+            new_project,
+            await donation_crud.get_opened_objects(session=session))
+    )
     await session.commit()
     await session.refresh(new_project)
     return new_project
+
 
 @router.get(
     '/',
@@ -54,24 +59,14 @@ async def partially_update_charity_project(
         charity_project_id: int,
         obj_in: CharityProjectUpdate,
         session: AsyncSession = Depends(get_async_session)):
-    charity_project = await check_charity_project_exists(
-        charity_project_id,
-        session)
+    charity_project = await check_charity_project_exists(charity_project_id, session)
     await check_charity_project_before_edit(
         charity_project_id,
         obj_in,
         session)
     if obj_in.name:
         await check_charity_project_name_duplicate(obj_in.name, session)
-    updated_project = await charity_project_crud.update(
-        charity_project,
-        obj_in,
-        session,
-        False)
-    session.add_all(await investing(updated_project, None))
-    await session.commit()
-    await session.refresh(charity_project)
-    return charity_project
+    return await charity_project_crud.update(charity_project, obj_in, session)
 
 
 @router.delete(
