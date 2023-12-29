@@ -1,13 +1,13 @@
 from datetime import datetime
 
-from app.models.sample_model import DonationAndCharityProjectBaseModel
+from app.models.sample_model import InvestableModel
 
 
 def investing(
-    target: DonationAndCharityProjectBaseModel,
-    sources: list[DonationAndCharityProjectBaseModel]
-) -> list[DonationAndCharityProjectBaseModel]:
-    changed_obj = []
+    target: InvestableModel,
+    sources: list[InvestableModel]
+) -> list[InvestableModel]:
+    changed = []
     for source in sources:
         if target.full_amount <= 0:
             break
@@ -20,5 +20,5 @@ def investing(
             if obj.full_amount == obj.invested_amount:
                 obj.close_date = datetime.now()
                 obj.fully_invested = True
-        changed_obj.append(source)
-    return changed_obj
+        changed.append(source)
+    return changed
