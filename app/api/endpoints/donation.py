@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_async_session
 from app.core.user import current_superuser, current_user
 from app.crud.donation import donation_crud
+from app.crud.base import CRUDBase as crud
 from app.models import User
 from app.schemas.donation import DonationCreate, DonationDB
 from app.utils import investing
@@ -31,7 +32,8 @@ async def create_new_donation(
         session,
         False,
         user)
-    session.add_all(await investing(session, new_donation))
+    opened_objects = await donation_crud.get_opened_objects(session=session)
+    session.add_all(await investing(new_donation, opened_objects))
     await session.commit()
     await session.refresh(new_donation)
     return new_donation

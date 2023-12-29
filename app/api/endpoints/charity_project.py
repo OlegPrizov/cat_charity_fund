@@ -14,9 +14,9 @@ from app.schemas.charity_project import (
     CharityProjectDB,
     CharityProjectUpdate)
 from app.utils import investing
-
+from sqlalchemy import not_, select
 router = APIRouter()
-
+from app.crud.charity_project import CRUDCharityProject
 
 @router.post(
     '/',
@@ -31,11 +31,11 @@ async def create_new_charity_project(
         charity_project,
         session,
         False)
-    session.add_all(await investing(session, new_project))
+    opened_objects = await charity_project_crud.get_opened_objects(session=session)
+    session.add_all(await investing(new_project, opened_objects))
     await session.commit()
     await session.refresh(new_project)
     return new_project
-
 
 @router.get(
     '/',
@@ -68,7 +68,7 @@ async def partially_update_charity_project(
         obj_in,
         session,
         False)
-    session.add_all(await investing(session, updated_project))
+    session.add_all(await investing(updated_project, None))
     await session.commit()
     await session.refresh(charity_project)
     return charity_project
