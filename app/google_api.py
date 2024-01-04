@@ -10,6 +10,7 @@ GET_REPORT_TO_GOOGLE = 'Добавить данные из БД в Google-таб
 TABLE_NAME = 'Отчеты QRkot'
 SHEET_NAME_RATING_SPEED_CLOSING = 'Рейтинг проектов по скорости закрытия'
 
+
 async def spreadsheet_create(wrapper_service: Aiogoogle) -> str:
     service = await wrapper_service.discover('sheets', 'v4')
     spreadsheet_body = {
